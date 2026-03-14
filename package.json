@@ -1,6 +1,6 @@
 {
   "name": "my-sticky-notes",
-  "version": "1.0.71",
+  "version": "1.0.72",
   "description": "A sticky notes desktop app with rich text and API",
   "main": "main.js",
   "author": "Ahmad",
