@@ -30,7 +30,6 @@ jobs:
       - name: Build Electron App
         run: npm run build:win
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           CSC_SKIP_SIGN: true
 
@@ -40,7 +39,6 @@ jobs:
         with:
           files: |
             dist/*.exe
-            dist/*.blockmap
           draft: false
           prerelease: false
         env:

@@ -1,6 +1,6 @@
 {
   "name": "my-sticky-notes",
-  "version": "1.0.74",
+  "version": "1.0.75",
   "description": "A sticky notes desktop app with rich text and API",
   "main": "main.js",
   "author": "Ahmad",
@@ -38,18 +38,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         },
         {
           "target": "portable",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
       "icon": "icon.png",
+      "artifactName": "${productName}-${version}-${target}.${ext}",
       "sign": null
     },
     "nsis": {
@@ -57,7 +54,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "My Sticky Notes"
+      "shortcutName": "My Sticky Notes",
+      "artifactName": "${productName}-${version}-Setup.${ext}"
     },
     "directories": {
       "output": "dist"
