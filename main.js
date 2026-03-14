@@ -787,7 +787,18 @@ function buildTrayMenu() {
                 );
               }
             } else if (choice === 1) {
-              require('child_process').exec(`notepad "${appConfigPath}"`);
+              // Ensure the directory and file exist before opening
+              try {
+                const dir = path.dirname(appConfigPath);
+                if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                if (!fs.existsSync(appConfigPath)) {
+                  fs.writeFileSync(appConfigPath, JSON.stringify(appConfig, null, 2));
+                }
+                require('child_process').exec(`notepad "${appConfigPath}"`);
+              } catch (err) {
+                console.error('[Config] Failed to ensure config file:', err);
+                dialog.showErrorBox('Config Error', 'Could not create or open config file: ' + err.message);
+              }
             }
           }
         },
