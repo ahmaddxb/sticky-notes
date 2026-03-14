@@ -40,12 +40,19 @@ A powerful, cross-platform desktop sticky notes application built with Electron,
 
 The project includes a lightweight Node.js sync server that can be easily deployed via Docker.
 
-1. Navigate to the sync server directory:
+1. **Quick Run (Pull from GitHub Registry)**:
+   ```bash
+   docker run -d -p 3001:3001 \
+     -e SYNC_KEY=your_secret_key \
+     -e SESSION_SECRET=your_session_secret \
+     -v "$(pwd)/data":/usr/src/app/data \
+     ghcr.io/ahmaddxb/sticky-notes-sync-server:latest
+   ```
+
+2. **Custom Deployment (Docker Compose)**:
+   Navigate to the `sync-server` directory and use the local build:
    ```bash
    cd sync-server
-   ```
-2. Launch with Docker Compose:
-   ```bash
    docker-compose up -d --build
    ```
 3. Access the dashboard at `http://your-server-ip:3001/dashboard.html` to manage users and API keys.
