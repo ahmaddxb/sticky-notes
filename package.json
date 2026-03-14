@@ -1,6 +1,6 @@
 {
   "name": "my-sticky-notes",
-  "version": "1.0.72",
+  "version": "1.0.73",
   "description": "A sticky notes desktop app with rich text and API",
   "main": "main.js",
   "author": "Ahmad",
@@ -8,7 +8,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
-    "build:win": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64"
+    "build:win": "electron-builder --win --x64"
   },
   "dependencies": {
     "ws": "^8.19.0"
