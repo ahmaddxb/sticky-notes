@@ -24,7 +24,7 @@ A powerful, cross-platform desktop sticky notes application built with Electron,
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/my-sticky-notes.git
+   git clone https://github.com/ahmaddxb/sticky-notes.git
    cd my-sticky-notes
    ```
 2. Install dependencies:
