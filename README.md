@@ -49,13 +49,21 @@ The project includes a lightweight Node.js sync server that can be easily deploy
      ghcr.io/ahmaddxb/sticky-notes-sync-server:latest
    ```
 
-2. **Custom Deployment (Docker Compose)**:
-   Navigate to the `sync-server` directory and use the local build:
+2. **Docker Deployment**:
+   Navigate to the `sync-server` directory and use the official production image:
    ```bash
    cd sync-server
-   docker-compose up -d --build
+   docker-compose up -d
    ```
-3. Access the dashboard at `http://your-server-ip:3001/dashboard.html` to manage users and API keys.
+
+3. **Development/Local Build**:
+   If you want to build the image locally from source:
+   ```bash
+   docker-compose -f docker-compose.dev.yml up -d --build
+   ```
+
+4. **Access the Dashboard**:
+   Go to `http://your-server-ip:3001/dashboard.html` to manage your persistent data and user accounts.
 
 ## 🛠️ Build Scripts
 

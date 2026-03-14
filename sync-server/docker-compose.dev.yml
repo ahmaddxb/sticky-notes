@@ -1,0 +1,21 @@
+# Development/Local Build Configuration
+services:
+  sync-server:
+    build: .
+    container_name: sticky-notes-sync
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DATA_FILE=/app/data/server-notes.json
+      - USER_FILE=/app/data/users.json
+      - SYNC_KEY=sticky-secret-key  # Change this for security
+    volumes:
+      # Maps the 'data' folder next to this file on your host to /app/data in container
+      # You can change './data' to an absolute path like '/home/user/sticky-data'
+      - ./data:/app/data
+      
+      # Optional: Also map the updates folder if you want to persist pushed updates
+      - ./updates:/app/updates
+
+    restart: unless-stopped
