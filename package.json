@@ -1,6 +1,6 @@
 {
   "name": "my-sticky-notes",
-  "version": "1.0.75",
+  "version": "1.0.76",
   "description": "A sticky notes desktop app with rich text and API",
   "main": "main.js",
   "author": "Ahmad",
@@ -46,7 +46,6 @@
         }
       ],
       "icon": "icon.png",
-      "artifactName": "${productName}-${version}-${target}.${ext}",
       "sign": null
     },
     "nsis": {
@@ -56,6 +55,9 @@
       "createStartMenuShortcut": true,
       "shortcutName": "My Sticky Notes",
       "artifactName": "${productName}-${version}-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.${ext}"
     },
     "directories": {
       "output": "dist"
