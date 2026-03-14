@@ -1,0 +1,66 @@
+{
+  "name": "my-sticky-notes",
+  "version": "1.0.71",
+  "description": "A sticky notes desktop app with rich text and API",
+  "main": "main.js",
+  "author": "Ahmad",
+  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "asar": "^3.2.0",
+    "electron": "^41.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.ahmad.my-sticky-notes",
+    "productName": "My Sticky Notes",
+    "copyright": "Copyright 2026 Ahmad",
+    "asar": false,
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!backup/**",
+      "!sync-server/**",
+      "!node_modules/electron-builder/**",
+      "!**/*.md",
+      "!*.ps1",
+      "!*.bat",
+      "!*_log.txt"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.png",
+      "sign": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "My Sticky Notes"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

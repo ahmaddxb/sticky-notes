@@ -1,0 +1,24 @@
+# Desktop App Build folders
+.agents/
+backup/
+dist/
+dist_unpacked/
+*.log
+
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Sync Server Data (CRITICAL: DO NOT UPLOAD)
+sync-server/server-notes.json
+sync-server/users.json
+sync-server/data/
+sync-server/updates/*.asar
+sync-server/updates/version.json
+
+# Local Environment
+.env
+app-config.json

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - My Sticky Notes Sync</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glass-card dashboard-container">
+        <nav>
+            <h2>My Sticky Notes Sync</h2>
+            <div>
+                <span id="user-display" style="margin-right: 15px; font-weight: 600;"></span>
+                <a href="/auth/logout" class="logout-link">Log out</a>
+            </div>
+        </nav>
+
+        <section id="api-key-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Your API Keys</h3>
+                <button class="secondary" id="add-key-btn" style="width: auto; margin: 0; padding: 0.5rem 1rem;">+ Create New Key</button>
+            </div>
+            <div id="keys-container" class="keys-grid">
+                <!-- Keys will be injected here -->
+            </div>
+        </section>
+
+        <section id="password-section" style="border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 2rem;">
+            <h3>Change Password</h3>
+            <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; margin-top: 1rem;">
+                <form id="change-password-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div class="input-group" style="margin: 0;">
+                        <label>Current Password</label>
+                        <input type="password" id="current-password" placeholder="Current Password" required>
+                    </div>
+                    <div class="input-group" style="margin: 0;">
+                        <label>New Password</label>
+                        <input type="password" id="change-new-password" placeholder="New Password" required>
+                    </div>
+                    <button type="submit" style="width: auto; margin: 0; padding: 0 1.5rem; height: 42px;">Update</button>
+                </form>
+                <div id="password-message" style="margin-top: 10px; font-weight: 500;"></div>
+            </div>
+        </section>
+
+        <section id="admin-section" style="display: none; border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 2rem;">
+            <h3>User Management (Admin Only)</h3>
+            <div class="user-list" id="user-list">
+                <!-- Users will be injected here -->
+            </div>
+            
+            <div style="margin-top: 2rem; background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px;">
+                <h4 style="margin-bottom: 1rem;">Create New User</h4>
+                <form id="create-user-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div class="input-group" style="margin: 0;">
+                        <label>Username</label>
+                        <input type="text" id="new-username" placeholder="Username" required>
+                    </div>
+                    <div class="input-group" style="margin: 0;">
+                        <label>Password</label>
+                        <input type="password" id="new-password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" style="width: auto; margin: 0; padding: 0 1.5rem; height: 42px;">Create User</button>
+                    <label style="grid-column: span 3; display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 10px;">
+                        <input type="checkbox" id="new-is-admin" style="width: auto;"> Give Admin Privileges
+                    </label>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const userDisplay = document.getElementById('user-display');
+        const keysContainer = document.getElementById('keys-container');
+        const adminSection = document.getElementById('admin-section');
+        const userList = document.getElementById('user-list');
+
+        let currentUser = null;
+
+        async function loadDashboard() {
+            const res = await fetch('/api/me');
+            if (!res.ok) {
+                window.location.href = '/login.html';
+                return;
+            }
+            currentUser = await res.json();
+            userDisplay.textContent = currentUser.username;
+
+            loadKeys();
+            if (currentUser.isAdmin) {
+                adminSection.style.display = 'block';
+                loadUsers();
+            }
+        }
+
+        async function loadKeys() {
+            const res = await fetch('/api/keys');
+            if (res.ok) {
+                const keys = await res.json();
+                keysContainer.innerHTML = keys.length ? keys.map(k => `
+                    <div class="api-key-item">
+                        <div class="key-info">
+                            <span class="key-label">${k.label}</span>
+                            <span class="key-date">Created: ${new Date(k.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div class="api-key-box" style="margin: 0.5rem 0;">
+                            <span class="monospace-key">${k.key}</span>
+                            <button class="copy-btn" onclick="copyKey('${k.key}', this)">Copy</button>
+                        </div>
+                        <button class="danger-text" onclick="deleteKey('${k.id}')">Delete Key</button>
+                    </div>
+                `).join('') : '<p style="color: var(--text-muted)">No API keys found. Create one to get started.</p>';
+            }
+        }
+
+        async function copyKey(text, btn) {
+            const originalText = btn.textContent;
+            
+            async function showSuccess() {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copy-success');
+                setTimeout(() => { 
+                    btn.textContent = originalText; 
+                    btn.classList.remove('copy-success');
+                }, 2000);
+            }
+
+            // Method 1: Modern Clipboard API (Requires HTTPS or localhost)
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    return showSuccess();
+                }
+            } catch (err) {}
+
+            // Method 2: Legacy Fallback (Works on internal HTTP IPs)
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (successful) return showSuccess();
+            } catch (err) {}
+
+            alert('Could not copy automatically. Please select the key text manually.');
+        }
+
+        document.getElementById('add-key-btn').onclick = async () => {
+            const label = prompt('Enter a label for this key (e.g. "Work Laptop", "Home Desktop"):');
+            if (label === null) return;
+            const res = await fetch('/api/keys', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ label: label || 'New Key' })
+            });
+            if (res.ok) loadKeys();
+        };
+
+        async function deleteKey(id) {
+            if (confirm('Are you sure you want to delete this key? Any device using it will lose sync access.')) {
+                const res = await fetch(`/api/keys/${id}`, { method: 'DELETE' });
+                if (res.ok) loadKeys();
+            }
+        }
+
+        document.getElementById('change-password-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('change-new-password').value;
+            const msgEl = document.getElementById('password-message');
+
+            const res = await fetch('/api/me/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            if (res.ok) {
+                msgEl.style.color = '#10b981';
+                msgEl.textContent = 'Password successfully updated!';
+                document.getElementById('change-password-form').reset();
+                setTimeout(() => msgEl.textContent = '', 3000);
+            } else {
+                const data = await res.json();
+                msgEl.style.color = '#ef4444';
+                msgEl.textContent = data.error || 'Failed to update password';
+            }
+        };
+
+        async function loadUsers() {
+            const res = await fetch('/api/admin/users');
+            if (res.ok) {
+                const users = await res.json();
+                userList.innerHTML = users.map(u => `
+                    <div class="user-item">
+                        <div>
+                            <strong>${u.username}</strong>
+                            ${u.isAdmin ? '<span class="badge badge-admin">Admin</span>' : ''}
+                            <div style="font-size: 0.8rem; color: var(--text-muted)">
+                                ${u.apiKeys ? u.apiKeys.length : 0} active keys
+                            </div>
+                        </div>
+                        ${u.id !== currentUser.id ? `<button class="danger" style="width: auto; margin:0;" onclick="deleteUser('${u.id}')">Delete User</button>` : ''}
+                    </div>
+                `).join('');
+            }
+        }
+
+        document.getElementById('create-user-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('new-username').value;
+            const password = document.getElementById('new-password').value;
+            const isAdmin = document.getElementById('new-is-admin').checked;
+
+            const res = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, isAdmin })
+            });
+
+            if (res.ok) {
+                document.getElementById('new-username').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('new-is-admin').checked = false;
+                loadUsers();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to create user');
+            }
+        };
+
+        async function deleteUser(id) {
+            if (confirm('Permanently delete this user and all their notes?')) {
+                const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+                if (res.ok) loadUsers();
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+*.md
+updates/
+!updates/version.json
+server-notes.json
+users.json

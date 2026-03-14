@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Sticky Note</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Early bridge for logs if electronAPI is ready
+        const log = (msg) => {
+            console.log('[Early-Diag] ' + msg);
+            if (window.electronAPI && window.electronAPI.logToServer) {
+                window.electronAPI.logToServer('[Index] ' + msg);
+            }
+        };
+
+        log('--- Index.html Script Trace ---');
+        if (window.electronAPI) {
+            log('electronAPI is present');
+        } else {
+            console.error('[Diagnostic] electronAPI is MISSING in window');
+        }
+    </script>
+</head>
+<body>
+    <div class="sticky-note">
+        <!-- Header -->
+        <div class="drag-region">
+            <div class="header-left">
+                <div class="header-btn" id="add-btn" title="New Note">+</div>
+            </div>
+            
+            <input id="note-title" type="text" placeholder="Untitled note…" spellcheck="false" autocomplete="off" />
+
+            <div class="header-right">
+                <div class="header-btn delete-btn" id="tray-trigger" title="Delete Permanently">🗑</div>
+                <div class="header-btn close-btn" id="close-btn" title="Close Window">&times;</div>
+            </div>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div id="note-content" contenteditable="true" aria-placeholder="Type here..."></div>
+
+        <!-- Bottom Toolbar -->
+        <div class="toolbar-container">
+            <div class="toolbar">
+                <button class="format-btn" id="bold-btn" title="Bold"><b>B</b></button>
+                <button class="format-btn" id="italic-btn" title="Italic"><i>I</i></button>
+                <button class="format-btn" id="underline-btn" title="Underline"><u>U</u></button>
+                <button class="format-btn" id="strike-btn" title="Strikethrough"><s>ab</s></button>
+                <button class="format-btn" id="list-btn" title="Bullet List">
+                    <div class="list-icon"><span></span><span></span><span></span></div>
+                </button>
+                <button class="format-btn" id="cb-btn" title="Checkbox">☑ Task</button>
+            </div>
+        </div>
+        <div class="resize-handle"></div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>

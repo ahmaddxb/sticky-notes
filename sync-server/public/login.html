@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - My Sticky Notes Sync</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glass-card">
+        <h1>Sync Server Login</h1>
+        <div id="alert" class="alert alert-error">Invalid username or password</div>
+        <form id="login-form">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required autocomplete="current-password">
+            </div>
+            <button type="submit">Log In</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const alert = document.getElementById('alert');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (res.ok) {
+                window.location.href = '/dashboard.html';
+            } else {
+                alert.style.display = 'block';
+                setTimeout(() => { alert.style.display = 'none'; }, 3000);
+            }
+        };
+
+        // If already logged in, redirect
+        fetch('/auth/check').then(res => {
+            if (res.ok) window.location.href = '/dashboard.html';
+        });
+    </script>
+</body>
+</html>
