@@ -3,7 +3,7 @@ $StartTime = Get-Date
 $ProjectName = "my-sticky-notes-tauri"
 $LocalTempBase = "C:\temp-builds"
 $LocalTempPath = "$LocalTempBase\$ProjectName"
-$SourcePath = Get-Location
+$SourcePath = $PSScriptRoot
 
 Write-Host "Preparing local build on C:\ (C:\temp-builds) to bypass network locks..." -ForegroundColor Cyan
 
