@@ -1,0 +1,10 @@
+{
+  "identifier": "default",
+  "description": "Default permissions for My Sticky Notes",
+  "windows": ["*"],
+  "permissions": [
+    "core:default",
+    "event:default",
+    "window:default"
+  ]
+}
