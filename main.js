@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, clipboard, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, clipboard, dialog, shell, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -433,9 +433,72 @@ ipcMain.on('log-renderer', (event, msg) => {
   console.log(`[Renderer] ${msg}`);
 });
 
+function ensureVisible(layout) {
+  const width = layout.width || 320;
+  const height = layout.height || 380;
+  layout.width = width;
+  layout.height = height;
+
+  const displays = screen.getAllDisplays();
+  const minVisibleOverlap = 100; // minimum pixels that must be visible on screen
+  
+  let isVisible = false;
+  
+  if (typeof layout.x === 'number' && typeof layout.y === 'number') {
+    // Check if the note intersects with any display's bounds
+    for (const display of displays) {
+      const bounds = display.bounds;
+      const overlapX = Math.max(0, Math.min(layout.x + width, bounds.x + bounds.width) - Math.max(layout.x, bounds.x));
+      const overlapY = Math.max(0, Math.min(layout.y + height, bounds.y + bounds.height) - Math.max(layout.y, bounds.y));
+      if (overlapX >= Math.min(width, minVisibleOverlap) && overlapY >= Math.min(height, minVisibleOverlap)) {
+        isVisible = true;
+        break;
+      }
+    }
+  }
+
+  if (!isVisible) {
+    // If not visible on any screen, place it on the primary display's workArea
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const workArea = primaryDisplay.workArea;
+    layout.x = Math.round(workArea.x + (workArea.width - width) / 2);
+    layout.y = Math.round(workArea.y + (workArea.height - height) / 2);
+  }
+  
+  return layout;
+}
+
+function adjustOpenWindowsVisibility() {
+  notesData.forEach(note => {
+    const win = activeWindows[note.id];
+    if (win && !win.isDestroyed()) {
+      const bounds = win.getBounds();
+      const layout = {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height
+      };
+      const validated = ensureVisible(layout);
+      if (validated.x !== bounds.x || validated.y !== bounds.y) {
+        win.setBounds(validated);
+        if (!layoutData[note.id]) layoutData[note.id] = { isOpen: true };
+        layoutData[note.id].x = validated.x;
+        layoutData[note.id].y = validated.y;
+      }
+    }
+  });
+  saveLayoutData();
+}
+
 function createNoteWindow(note) {
   console.log(`[Main] Creating window for note: ${note.id}`);
-  const layout = layoutData[note.id] || { width: 320, height: 380 };
+  let layout = layoutData[note.id] || { width: 320, height: 380 };
+
+  // Ensure the layout coordinates are on-screen
+  layout = ensureVisible(layout);
+  layoutData[note.id] = layout;
+  saveLayoutData();
 
   const win = new BrowserWindow({
     x: layout.x,
@@ -495,6 +558,16 @@ function createNoteWindow(note) {
 app.whenReady().then(() => {
   console.log('[Main] App is ready, initializing windows and services...');
   
+  // Screen/Display change listeners
+  screen.on('display-metrics-changed', () => {
+    console.log('[Main] Display metrics changed, ensuring all open notes are visible...');
+    adjustOpenWindowsVisibility();
+  });
+  screen.on('display-removed', () => {
+    console.log('[Main] Display removed, ensuring all open notes are visible...');
+    adjustOpenWindowsVisibility();
+  });
+
   // Custom update check on startup
   setTimeout(() => checkForUpdates(true), 5000); 
 
@@ -716,6 +789,31 @@ function buildTrayMenu() {
               tray.setContextMenu(buildTrayMenu());
             }
         }
+      }
+    },
+    { label: 'Recenter All Notes', click: () => {
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const workArea = primaryDisplay.workArea;
+        let index = 0;
+        
+        notesData.forEach(note => {
+          const win = activeWindows[note.id];
+          if (win && !win.isDestroyed()) {
+            const width = layoutData[note.id]?.width || 320;
+            const height = layoutData[note.id]?.height || 380;
+            const offset = index * 30;
+            const x = Math.round(workArea.x + (workArea.width - width) / 2 + offset);
+            const y = Math.round(workArea.y + (workArea.height - height) / 2 + offset);
+            
+            win.setBounds({ x, y, width, height });
+            
+            if (!layoutData[note.id]) layoutData[note.id] = { isOpen: true };
+            layoutData[note.id].x = x;
+            layoutData[note.id].y = y;
+            index++;
+          }
+        });
+        saveLayoutData();
       }
     },
     { type: 'separator' },

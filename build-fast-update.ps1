@@ -17,7 +17,28 @@ $ServerUpdatePath = "z:\my-sticky-notes\sync-server\updates\update.asar"
 $VersionFile = "z:\my-sticky-notes\sync-server\updates\version.json"
 
 Write-Host "Packaging version $NewVersion..." -ForegroundColor Cyan
-npx asar pack $StagingArea $ServerUpdatePath
+$NodeExe = "node"
+if (!(Get-Command node -ErrorAction SilentlyContinue)) {
+    $CommonPaths = @(
+        "$env:LOCALAPPDATA\ms-playwright-go\1.57.0\node.exe",
+        "$env:LOCALAPPDATA\ms-playwright-go\1.50.1\node.exe",
+        "$env:USERPROFILE\.lmstudio\.internal\utils\node.exe",
+        "C:\Program Files\nodejs\node.exe"
+    )
+    foreach ($Path in $CommonPaths) {
+        if (Test-Path $Path) {
+            $NodeExe = $Path
+            break
+        }
+    }
+}
+
+if ($NodeExe -ne "node") {
+    Write-Host "Using fallback Node: $NodeExe" -ForegroundColor Yellow
+    & $NodeExe node_modules\asar\bin\asar.js pack $StagingArea $ServerUpdatePath
+} else {
+    npx asar pack $StagingArea $ServerUpdatePath
+}
 
 $VersionJson = @{
     version = $NewVersion
