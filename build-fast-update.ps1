@@ -42,11 +42,22 @@ if ($NodeExe -ne "node") {
 
 $VersionJson = @{
     version = $NewVersion
-    asarUrl = "http://10.10.3.160:3001/update/update.asar"
+    asarUrl = "http://nss.ahmaddxb.xyz/update/update.asar"
 } | ConvertTo-Json
 Set-Content -Path $VersionFile -Value $VersionJson
 
 Write-Host "Published version $NewVersion to local sync-server updates folder." -ForegroundColor Gray
+
+# 3b. Copy to network share
+$RemoteUpdateFolder = "\\10.1.100.50\appdata\notes-sync-server\updates"
+if (Test-Path $RemoteUpdateFolder) {
+    Write-Host "Copying update files to network share: $RemoteUpdateFolder..." -ForegroundColor Cyan
+    Copy-Item -Path $ServerUpdatePath -Destination $RemoteUpdateFolder -Force
+    Copy-Item -Path $VersionFile -Destination $RemoteUpdateFolder -Force
+    Write-Host "Successfully copied to network share." -ForegroundColor Green
+} else {
+    Write-Host "Warning: Network share path '$RemoteUpdateFolder' is not reachable. Skipping remote copy." -ForegroundColor Yellow
+}
 
 # 4. Cleanup
 Remove-Item -Path $StagingArea -Recurse -Force
