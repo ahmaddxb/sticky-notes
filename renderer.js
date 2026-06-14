@@ -37,14 +37,33 @@ console.log(`[Diagnostic] noteArea found: ${!!noteArea}, titleInput found: ${!!t
 let timeout = null;
 let currentNoteId = null;
 
+const pinBtn = document.getElementById('pin-btn');
+
+function setPinnedState(isPinned) {
+    const noteEl = document.querySelector('.sticky-note');
+    if (isPinned) {
+        noteEl.classList.add('is-pinned');
+        if (pinBtn) pinBtn.title = "Unlock Location";
+    } else {
+        noteEl.classList.remove('is-pinned');
+        if (pinBtn) pinBtn.title = "Lock Location";
+    }
+}
+
 // Initial hydration from Main Process
-window.electronAPI.onLoadNote((note) => {
-    console.log(`[IPC] Received load-note for ID: ${note.id}`);
+window.electronAPI.onLoadNote((note, isPinned) => {
+    console.log(`[IPC] Received load-note for ID: ${note.id}, pinned: ${isPinned}`);
     currentNoteId = note.id;
     if (note.content) noteArea.innerHTML = note.content;
     if (titleInput) {
         titleInput.value = note.name || '';
     }
+    setPinnedState(!!isPinned);
+});
+
+window.electronAPI.onPinnedState((isPinned) => {
+    console.log(`[IPC] Received pinned-state: ${isPinned}`);
+    setPinnedState(isPinned);
 });
 
 // Save note name with debounce
@@ -116,6 +135,11 @@ safeListen('add-btn', 'click', (e) => {
 safeListen('close-btn', 'click', (e) => {
     e.stopPropagation();
     if (currentNoteId) window.electronAPI.closeNote(currentNoteId);
+});
+
+safeListen('pin-btn', 'click', (e) => {
+    e.stopPropagation();
+    if (currentNoteId) window.electronAPI.togglePin(currentNoteId);
 });
 
 safeListen('tray-trigger', 'click', (e) => {

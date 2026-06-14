@@ -401,7 +401,8 @@ function registerFileWatcher() {
         notesData.forEach(note => {
           const win = activeWindows[note.id];
           if (win && !win.isDestroyed()) {
-            win.webContents.send('load-note', note);
+            const currentLayout = layoutData[note.id] || {};
+            win.webContents.send('load-note', note, !!currentLayout.isPinned);
             win.setTitle(note.name || 'Sticky Note');
           }
         });
@@ -500,6 +501,8 @@ function createNoteWindow(note) {
   layoutData[note.id] = layout;
   saveLayoutData();
 
+  const isPinned = !!layout.isPinned;
+
   const win = new BrowserWindow({
     x: layout.x,
     y: layout.y,
@@ -509,7 +512,8 @@ function createNoteWindow(note) {
     minHeight: 200,
     frame: false,
     transparent: true,
-    resizable: true,
+    resizable: !isPinned,
+    movable: !isPinned,
     thickFrame: true,
     alwaysOnTop: false,
     skipTaskbar: true,
@@ -528,7 +532,8 @@ function createNoteWindow(note) {
     console.log(`[Main] Window finished load: ${note.id}`);
     const latestNote = notesData.find(n => n.id === note.id);
     if (latestNote) {
-      win.webContents.send('load-note', latestNote);
+      const currentLayout = layoutData[note.id] || {};
+      win.webContents.send('load-note', latestNote, !!currentLayout.isPinned);
     }
   });
 
@@ -619,7 +624,8 @@ app.whenReady().then(() => {
       notesData.forEach(note => {
         const win = activeWindows[note.id];
         if (win && !win.isDestroyed()) {
-          win.webContents.send('load-note', note);
+          const currentLayout = layoutData[note.id] || {};
+          win.webContents.send('load-note', note, !!currentLayout.isPinned);
           win.setTitle(note.name || 'Sticky Note');
         }
       });
@@ -825,7 +831,10 @@ function buildTrayMenu() {
             registerFileWatcher(); // Restart watcher
             notesData.forEach(note => {
               const win = activeWindows[note.id];
-              if (win && !win.isDestroyed()) win.webContents.send('load-note', note);
+              if (win && !win.isDestroyed()) {
+                const currentLayout = layoutData[note.id] || {};
+                win.webContents.send('load-note', note, !!currentLayout.isPinned);
+              }
             });
             if (tray) tray.setContextMenu(buildTrayMenu());
             dialog.showMessageBoxSync({ title: 'Sync', message: 'Notes reloaded from disk.' });
@@ -1028,6 +1037,21 @@ ipcMain.on('new-note', () => {
     saveLayoutData();
     createNoteWindow(newNote);
     tray.setContextMenu(buildTrayMenu());
+});
+
+ipcMain.on('toggle-pin', (event, id) => {
+  if (layoutData[id]) {
+    const isPinned = !layoutData[id].isPinned;
+    layoutData[id].isPinned = isPinned;
+    saveLayoutData();
+    
+    const win = activeWindows[id];
+    if (win && !win.isDestroyed()) {
+      win.setMovable(!isPinned);
+      win.setResizable(!isPinned);
+      win.webContents.send('pinned-state', isPinned);
+    }
+  }
 });
 
 ipcMain.on('resize-window', (event, { width, height }) => {

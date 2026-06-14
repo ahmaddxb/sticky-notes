@@ -8,5 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveName: (id, name) => ipcRenderer.send('save-name', id, name),
     resizeWindow: (width, height) => ipcRenderer.send('resize-window', { width, height }),
     logToServer: (msg) => ipcRenderer.send('log-renderer', msg),
-    onLoadNote: (callback) => ipcRenderer.on('load-note', (event, note) => callback(note))
+    togglePin: (id) => ipcRenderer.send('toggle-pin', id),
+    onLoadNote: (callback) => ipcRenderer.on('load-note', (event, note, isPinned) => callback(note, isPinned)),
+    onPinnedState: (callback) => ipcRenderer.on('pinned-state', (event, isPinned) => callback(isPinned))
 });
