@@ -440,6 +440,10 @@ function ensureVisible(layout) {
   layout.width = width;
   layout.height = height;
 
+  if (layout.isPinned && typeof layout.x === 'number' && typeof layout.y === 'number') {
+    return layout;
+  }
+
   const displays = screen.getAllDisplays();
   const minVisibleOverlap = 100; // minimum pixels that must be visible on screen
   
@@ -478,7 +482,8 @@ function adjustOpenWindowsVisibility() {
         x: bounds.x,
         y: bounds.y,
         width: bounds.width,
-        height: bounds.height
+        height: bounds.height,
+        isPinned: !!(layoutData[note.id]?.isPinned)
       };
       const validated = ensureVisible(layout);
       if (validated.x !== bounds.x || validated.y !== bounds.y) {
@@ -737,6 +742,39 @@ function resetSyncFolder() {
   });
 }
 
+function resetSingleNoteLocation(id) {
+  const note = notesData.find(n => n.id === id);
+  if (!note) return;
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const workArea = primaryDisplay.workArea;
+  const width = layoutData[id]?.width || 320;
+  const height = layoutData[id]?.height || 380;
+  const x = Math.round(workArea.x + (workArea.width - width) / 2);
+  const y = Math.round(workArea.y + (workArea.height - height) / 2);
+
+  if (!layoutData[id]) {
+    layoutData[id] = {};
+  }
+  layoutData[id].x = x;
+  layoutData[id].y = y;
+  layoutData[id].width = width;
+  layoutData[id].height = height;
+  layoutData[id].isOpen = true;
+  saveLayoutData();
+
+  const win = activeWindows[id];
+  if (win && !win.isDestroyed()) {
+    win.setBounds({ x, y, width, height });
+    win.show();
+    win.focus();
+  } else {
+    createNoteWindow(note);
+  }
+
+  if (tray) tray.setContextMenu(buildTrayMenu());
+}
+
 function buildTrayMenu() {
   const syncLabel = appConfig.customNotesPath 
     ? `📁 Syncing to: ${path.basename(appConfig.customNotesPath)}...`
@@ -821,6 +859,18 @@ function buildTrayMenu() {
         });
         saveLayoutData();
       }
+    },
+    {
+      label: 'Reset Note Position',
+      submenu: [...notesData].sort((a,b) => (b.id - a.id)).map(n => {
+        const displayName = (n.name && n.name.trim() !== '') ? n.name : 'Untitled Note';
+        return {
+          label: displayName,
+          click: () => {
+            resetSingleNoteLocation(n.id);
+          }
+        };
+      })
     },
     { type: 'separator' },
     { 
